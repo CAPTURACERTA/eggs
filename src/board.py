@@ -11,8 +11,8 @@ class Board:
 
     def start(self):
         for cell in range(self.length):
-            self[0, cell] = Egg(1, [0, cell])
-            self[-1, cell] = Egg(2, [self.height - 1, cell])
+            self[0, cell] = Egg(1, (0, cell))
+            self[-1, cell] = Egg(2, (self.height - 1, cell))
 
     def apply_move(self, move: Move):
         if move.captured_pieces:
@@ -48,24 +48,16 @@ class Board:
         while pieces_to_look:
             current_piece = pieces_to_look.pop()
             chain.append(current_piece)   
-
-            curr_x, curr_y = current_piece.position
             
-            for dx, dy in [[-1,0], [1,0], [0,-1], [0,1]]:
-                nx, ny = curr_x + dx, curr_y + dy
-                
-                if self._is_within_bounds(nx, ny):
-                    neighbor = self[nx, ny]
-                    if (isinstance(neighbor, Egg) and 
-                        neighbor.group == piece.group and 
-                        neighbor not in visited):
-                        
-                        pieces_to_look.append(neighbor)
-                        visited.add(neighbor)
+            for square, item_square in self.query_piece_surrounds(current_piece):
+                if (item_square == piece.group and 
+                    self[square] not in visited):
+                    pieces_to_look.append(self[square])
+                    visited.add(self[square])
 
         return chain if len(chain) > 1 else []
 
-    def get_group(self, group: int):
+    def get_group(self, group: int) -> list[Egg]:
         if group not in [1,2]:
             raise IndexError(f"No existing group {group}")
         
@@ -75,7 +67,35 @@ class Board:
             if piece != 0 and piece.get_group() == group
         ]   
 
+    def get_touching_pieces(self, piece: Egg) -> tuple[Egg, ...]:
+        touching_pieces = []
+        enemy_group = 2 if piece.group == 1 else 1
+
+        for square, item_square in self.query_piece_surrounds(piece):
+            if item_square == enemy_group:
+                touching_pieces.append(self[square])
+
+        return tuple(touching_pieces) 
+
+
+
     # HELPERS and ____
+
+    def query_piece_surrounds(self, piece: Egg) -> list[tuple[tuple[int, int], int]]:
+        surrounds = []
+
+        curr_x, curr_y = piece.position
+
+        for dx, dy in [[-1,0], [1,0], [0,-1], [0,1]]:
+            square = curr_x + dx, curr_y + dy
+            item_square = self.query_square(square)
+
+            if item_square != -1: 
+                surrounds.append(
+                    (square, item_square)
+                )
+
+        return surrounds
 
     def query_square(self, square: tuple[int, int]) -> int:
         x, y = square
