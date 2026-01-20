@@ -1,23 +1,16 @@
-
+from uuid import uuid4
 
 class Egg:
     def __init__(self, group: int, position: tuple[int, int]):
+        self.id = uuid4()          
         self.group = group
         self.position = position
 
+    def __hash__(self):
+        return hash(self.id)
 
-    def get_group(self):
-        return self.group
-    
-    def get_position(self):
-        return self.position
+    def __eq__(self, other):
+        return isinstance(other, Egg) and self.id == other.id
 
     def __repr__(self):
         return "⚪" if self.group == 1 else "⚫"
-
-def main():
-    ...
-
-
-if __name__ == "__main__":
-    main()

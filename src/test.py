@@ -1,26 +1,37 @@
 from board import Board
-from game_controle import GameControler
+from game_controle import GameController
 from move import Move
-
+from copy import deepcopy
 
 b = Board()
 b.start()
-game = GameControler(b)
+game = GameController(b)
 
 p1 = b.get_group(1)
 p2 = b.get_group(2)
 
-moves = [
-    Move(p1[0], [(0,0), (4,2)]), Move(p1[1], [(0,1), (1,1)])
-]
+turn = 1
 
-i = 0
-for pos in [[4,1],[3,0],[2,1],[3,2], [5,2]]:
-    egg = p2[i]
-    moves.append(Move(egg, [egg.position, pos]))
-    i += 1
-for m in moves: b.apply_move(m)
+while True:
+    print(b)
 
-for m in game._get_group_mandatory_moves():
-    print(m)
-print(b)
+    piece = None
+    while not isinstance(piece, int):
+        try:
+            piece = int(input("> piece: ").strip())
+        except Exception as e:
+            continue
+
+    print("> legal moves:")
+    i = 0
+    moves = game.get_legal_moves(p1[piece] if turn == 1 else p2[piece])
+    for move in moves:
+        print(f"> {i} - {move}")
+        i += 1
+    
+    try:
+        move = int(input("> move: ").strip())
+        game.make_move(moves[move])
+        turn = 2 if turn == 1 else 1
+    except Exception as e:
+        continue

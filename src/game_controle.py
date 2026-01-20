@@ -1,50 +1,83 @@
 from copy import deepcopy
-from board import Board
+from board import Board, EMPTY_SQUARE, WHITE, BLACK
 from move import Move
 from pieces import Egg
 
 
-class GameControler:
+class GameController:
     def __init__(self, board: Board):
         
         self.board = board
-        self.group_turn = 1
-        self.mandatory_group_moves: list[Move] = []
+        self.group_turn = WHITE
 
         self.moves = []
     
+        self.temp_mandatory_group_moves = self._get_group_mandatory_moves()
+        self.temp_piece_legal_moves: dict[Egg, list[Move]] = {}
+
+    def make_move(self, move: Move):
+        if move.piece.group != self.group_turn:
+            print("Not your turn")
+            return False
+        
+        if move not in self.get_legal_moves(move.piece):
+            print("illegal move")
+            return False
+        
+        self.board.apply_move(move)
+        self.moves.append(move)
+
+        if self._check_win():
+            self._end_game()
+        else:
+            self._change_turn()
+
+        return True
+
+    # 
+    # GET MOVES
+
+    def iter_legal_moves_for_group(self, group):
+        for piece in self.board.get_group(group):
+            for move in self.get_legal_moves(piece):
+                yield move
+
 
     def get_legal_moves(self, piece: Egg):
         moves = []
 
-        if self.mandatory_group_moves:
-            for move in self.mandatory_group_moves:
-                if piece == move.piece:
-                    moves.append(move)
-        else:
-            if move := self._get_first_square_move(piece): moves.append(move)
-            moves += self._get_basic_moves(piece, piece)
-            moves += self._get_chain_moves(piece)
+        if self.temp_mandatory_group_moves:
+            return [
+                m for m in self.temp_mandatory_group_moves if m.piece == piece
+            ]
+
+        if piece in self.temp_piece_legal_moves:
+            return self.temp_piece_legal_moves[piece]
+        
+        if move := self._get_first_square_move(piece): moves.append(move)
+        moves += self._get_basic_moves(piece, piece)
+        moves += self._get_chain_moves(piece)
+
+        self.temp_piece_legal_moves[piece] = moves
 
         return moves
     
     def _get_first_square_move(self, piece: Egg):
         curr_x, curr_y = piece.position
         
-        start_row = 0 if piece.group == 1 else self.board.height - 1
-        direction = 1 if start_row == 0 else -1
+        home_row = self.board.get_start_row(self.group_turn)
+        direction = 1 if home_row == 0 else -1
 
-        if curr_x == start_row:
+        if curr_x == home_row:
             target_x = curr_x + (2 * direction)
             final_square = (target_x, curr_y)
             intermediate_square = (target_x - direction, curr_y)
 
-            if (self.board.query_square(intermediate_square) == 0 and
-                self.board.query_square(final_square) == 0):
+            if (self.board.query_square(intermediate_square) == EMPTY_SQUARE and
+                self.board.query_square(final_square) == EMPTY_SQUARE):
                 return Move(piece, [piece.position, final_square])
 
         return 
-
 
     def _get_basic_moves(self, query_piece: Egg, target_piece: Egg) -> list[Move | None]:
         moves = []
@@ -53,7 +86,7 @@ class GameControler:
 
         for dx, dy in [[-1,0], [1,0], [0,-1], [0,1]]:
             square = (curr_x + dx, curr_y + dy)
-            if self.board.query_square(square) == 0:
+            if self.board.query_square(square) == EMPTY_SQUARE:
                 moves.append(Move(target_piece,[target_piece.position, square]))
 
         return moves
@@ -61,7 +94,7 @@ class GameControler:
     def _get_chain_moves(self, piece: Egg):
         moves = []
 
-        chain = self.board.get_chain(piece)
+        chain = self.board.get_connected_group_chain(piece)
 
         if chain:
             for query_piece in chain[1:]:
@@ -69,7 +102,7 @@ class GameControler:
 
         return moves
 
-    def _get_group_mandatory_moves(self):
+    def _get_group_mandatory_moves(self) -> list | list[Move]:
         moves = []
 
         for piece in self.board.get_group(self.group_turn):
@@ -83,7 +116,7 @@ class GameControler:
     
     def _get_mandatory_moves(
         self, piece: Egg, current_move: Move = None
-    ):
+    ) -> list | list[Move]:
         moves = []
 
         if current_move is None:
@@ -111,6 +144,9 @@ class GameControler:
 
         return moves
 
+    # GET MOVES
+    # HELPERS
+
     def _can_i_eat(self, piece: Egg, enemy: Egg):
         dx = enemy.position[0] - piece.position[0]
         dy = enemy.position[1] - piece.position[1]
@@ -118,9 +154,42 @@ class GameControler:
         if abs(dx) + abs(dy) == 1:
             landing_square = (enemy.position[0] + dx, enemy.position[1] + dy)
 
-            if self.board.query_square(landing_square) == 0:
+            if self.board.query_square(landing_square) == EMPTY_SQUARE:
                 return landing_square
         
         return ()
     
-    # preciso aplicar a lógica no get_basic_moves para não permitir, pois há movimentos obrigatórios
+    def _can_group_move(self, group):
+        return any(self.iter_legal_moves_for_group(group))
+
+    # HELPERS
+    # 
+
+    def _change_turn(self):
+        self.group_turn = BLACK if self.group_turn == WHITE else WHITE
+        self.temp_mandatory_group_moves = self._get_group_mandatory_moves()
+        self.temp_piece_legal_moves = {}
+
+    def _check_win(self):   
+        enemy_group = BLACK if self.group_turn == WHITE else WHITE
+
+        if last_row_pieces := [
+            piece for piece in self.board.get_group(self.group_turn)
+            if piece.position[0] == self.board.get_goal_row(self.group_turn)
+        ]:
+            for lr_piece in last_row_pieces:
+                for touching_piece in self.board.get_touching_pieces(lr_piece):
+                    if self._can_i_eat(touching_piece, lr_piece):
+                        break
+                else:
+                    return True
+        elif len(self.board.get_group(enemy_group)) == 0:
+            return True
+        elif not self._can_group_move(enemy_group):
+            # problema, quando checa isso, usa o cache atual, que é do grupo atual, n do inimigo
+            return True
+
+        return False
+    
+    def _end_game(self):
+        print(f"jogador {self.group_turn} vence")
