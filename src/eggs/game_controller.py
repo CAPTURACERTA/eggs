@@ -1,7 +1,7 @@
 from copy import deepcopy
-from board import Board, EMPTY_SQUARE, WHITE, BLACK
-from move import Move
-from pieces import Egg
+from eggs.board import Board, EMPTY_SQUARE, WHITE, BLACK
+from eggs.move import Move
+from eggs.pieces import Egg
 
 
 class GameController:
@@ -33,6 +33,16 @@ class GameController:
             self._change_turn()
 
         return True
+
+    def undo_move(self):
+        if not self.moves:
+            print("Nada para desfazer!")
+            return
+
+        last_move = self.moves.pop()      
+        self.board.undo_move(last_move)
+        self._change_turn()
+        
 
     # 
     # GET MOVES
@@ -185,9 +195,9 @@ class GameController:
                     return True
         elif len(self.board.get_group(enemy_group)) == 0:
             return True
-        elif not self._can_group_move(enemy_group):
-            # problema, quando checa isso, usa o cache atual, que é do grupo atual, n do inimigo
-            return True
+        # elif not self._can_group_move(enemy_group):
+        #     # problema, quando checa isso, usa o cache atual, que é do grupo atual, n do inimigo
+        #     return True
 
         return False
     

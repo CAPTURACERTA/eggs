@@ -1,5 +1,5 @@
-from pieces import Egg
-from move import Move
+from eggs.pieces import Egg
+from eggs.move import Move
 
 
 OUT_OF_BOUNDS = -1
@@ -28,8 +28,8 @@ class Board:
         new_x, new_y = move.path[-1]
 
         move.piece.position = (new_x, new_y)
-        self[new_x, new_y] = move.piece
         self[old_x, old_y] = EMPTY_SQUARE
+        self[new_x, new_y] = move.piece
 
     def undo_move(self, move: Move):
         if move.captured_pieces:
@@ -40,8 +40,8 @@ class Board:
         new_x, new_y = move.path[0]
 
         move.piece.position = (new_x, new_y)
-        self[new_x, new_y] = move.piece
         self[old_x, old_y] = EMPTY_SQUARE
+        self[new_x, new_y] = move.piece
 
     # GETTERS
 

@@ -1,7 +1,5 @@
-from board import Board
-from game_controle import GameController
-from move import Move
-from copy import deepcopy
+from eggs.board import Board
+from eggs.game_controller import GameController
 
 b = Board()
 b.start()

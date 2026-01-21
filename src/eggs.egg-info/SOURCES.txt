@@ -1,0 +1,15 @@
+LICENSE
+README.md
+pyproject.toml
+src/eggs/__init__.py
+src/eggs/board.py
+src/eggs/game_controle.py
+src/eggs/move.py
+src/eggs/pieces.py
+src/eggs/player.py
+src/eggs.egg-info/PKG-INFO
+src/eggs.egg-info/SOURCES.txt
+src/eggs.egg-info/dependency_links.txt
+src/eggs.egg-info/requires.txt
+src/eggs.egg-info/top_level.txt
+tests/test.py

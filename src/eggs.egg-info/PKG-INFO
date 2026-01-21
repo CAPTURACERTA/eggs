@@ -1,0 +1,12 @@
+Metadata-Version: 2.4
+Name: eggs
+Version: 0.1.0
+Summary: Add your description here
+Requires-Python: >=3.13
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pygame>=2.6.1
+Dynamic: license-file
+
+# eggs
+let's play eggs?

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from pieces import Egg
+from eggs.pieces import Egg
 
 @dataclass
 class Move:
