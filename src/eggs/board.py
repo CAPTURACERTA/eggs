@@ -13,12 +13,6 @@ class Board:
         self.height = height
         self.grid = [[EMPTY_SQUARE for _ in range(length)] for _ in range(height)]
 
-
-    def start(self):
-        for cell in range(self.length):
-            self[0, cell] = Egg(WHITE, (0, cell))
-            self[-1, cell] = Egg(BLACK, (self.height - 1, cell))
-
     def apply_move(self, move: Move):
         if move.captured_pieces:
             for piece in move.captured_pieces:
@@ -72,7 +66,7 @@ class Board:
             if piece != EMPTY_SQUARE and piece.group == group
         ]   
 
-    def get_touching_pieces(self, piece: Egg) -> tuple[Egg, ...]:
+    def get_enemy_touching_pieces(self, piece: Egg) -> tuple[Egg, ...]:
         touching_pieces = []
         enemy_group = BLACK if piece.group == WHITE else WHITE
 
@@ -136,3 +130,17 @@ class Board:
         for row in self.grid:
             s += f"{row}\n"
         return s
+    
+    #
+
+    def start(self):
+        for cell in range(self.length):
+            self[0, cell] = Egg(WHITE, (0, cell))
+            self[-1, cell] = Egg(BLACK, (self.height - 1, cell))
+
+    def custom_board(self, grid: list[list[int]]):
+        for line, ls in enumerate(grid):
+            for column, cell in enumerate(ls):
+                if cell in [WHITE, BLACK]:
+                    self[line,column] = Egg(cell, (line,column))
+            

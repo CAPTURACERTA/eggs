@@ -17,8 +17,8 @@
 
 # winning
 You win a match on 3 different ways:
-- By placing one of your eggs in the enemies' first line (initial line) without it being captured right away. That means: by arriving the last line safely. That's the main way of winning.
-- By capturing all enemies' eggs. Rare, honestly.
+- By placing one of your eggs in the last row (enemy's initial row) stably. I.e.: Arriving the las row without immediately being able to capture or be captured. That's the main way of winning.
+- By capturing all enemy's eggs. Rare, honestly.
 - By "stalemating" your enemie. That is: your enemie doesn't have any legal moves left. Extremely rare.
 
 # drawing

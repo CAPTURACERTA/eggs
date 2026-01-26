@@ -2,6 +2,7 @@ import pygame
 import sys
 from eggs.board import Board, WHITE, BLACK, EMPTY_SQUARE
 from eggs.game_controller import GameController
+from eggs.game_state import GameState
 from eggs.pieces import Egg
 
 # --- CONFIGURAÇÕES VISUAIS ---
@@ -29,7 +30,8 @@ def main():
     # --- INICIALIZAÇÃO DO JOGO ---
     board = Board(length=COLS, height=ROWS)
     board.start()
-    controller = GameController(board)
+    gs = GameState(board)
+    controller = GameController(gs)
 
     # Variáveis de Estado da UI
     selected_piece: Egg | None = None
@@ -87,7 +89,7 @@ def main():
                             
                             # Se clicou na mesma peça ou em outra coisa inválida, apenas desseleciona
                             # (A menos que tenha clicado em OUTRA peça sua, aí trocamos a seleção abaixo)
-                            if not move_made and clicked_item != controller.group_turn:
+                            if not move_made and clicked_item != controller.state.turn:
                                 selected_piece = None
                                 valid_moves_for_selected = []
 
@@ -95,9 +97,9 @@ def main():
                         if not move_made:
                             item_at_square = board[row, col]
                             # Só seleciona se for um Ovo e for a vez do grupo dele
-                            if isinstance(item_at_square, Egg) and item_at_square.group == controller.group_turn:
+                            if isinstance(item_at_square, Egg) and item_at_square.group == controller.state.turn:
                                 selected_piece = item_at_square
-                                valid_moves_for_selected = controller.get_legal_moves(selected_piece)
+                                valid_moves_for_selected = controller.get_piece_legal_moves(selected_piece)
                                 print(f"Selecionada: {selected_piece} em {selected_piece.position}. Opções: {len(valid_moves_for_selected)}")
 
         # 2. DESENHO (DRAW)
@@ -150,6 +152,7 @@ def main():
         pygame.display.flip()
         clock.tick(60)
 
+    print(gs.moves)
     pygame.quit()
     sys.exit()
 
