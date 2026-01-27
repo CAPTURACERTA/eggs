@@ -7,6 +7,7 @@ EMPTY_SQUARE = 0
 WHITE = 1
 BLACK = 2
 
+
 class Board:
     def __init__(self, length=5, height=6):
         self.length = length
@@ -17,7 +18,7 @@ class Board:
         if move.captured_pieces:
             for piece in move.captured_pieces:
                 self[piece.position] = EMPTY_SQUARE
-        
+
         old_x, old_y = move.path[0]
         new_x, new_y = move.path[-1]
 
@@ -29,7 +30,7 @@ class Board:
         if move.captured_pieces:
             for piece in move.captured_pieces:
                 self[piece.position] = piece
-        
+
         old_x, old_y = move.path[-1]
         new_x, new_y = move.path[0]
 
@@ -46,25 +47,25 @@ class Board:
 
         while pieces_to_look:
             current_piece = pieces_to_look.pop()
-            chain.append(current_piece)   
-            
+            chain.append(current_piece)
+
             for square, item_square in self.query_piece_surroundings(current_piece):
-                if (item_square == piece.group and 
-                    self[square] not in visited):
+                if item_square == piece.group and self[square] not in visited:
                     pieces_to_look.append(self[square])
                     visited.add(self[square])
 
         return chain if len(chain) > 1 else []
 
     def get_group(self, group: int) -> list[Egg]:
-        if group not in [1,2]:
+        if group not in [1, 2]:
             raise IndexError(f"No existing group {group}")
-        
+
         return [
-            piece for row in self.grid
+            piece
+            for row in self.grid
             for piece in row
             if piece != EMPTY_SQUARE and piece.group == group
-        ]   
+        ]
 
     def get_enemy_touching_pieces(self, piece: Egg) -> tuple[Egg, ...]:
         touching_pieces = []
@@ -74,11 +75,11 @@ class Board:
             if item_square == enemy_group:
                 touching_pieces.append(self[square])
 
-        return tuple(touching_pieces) 
+        return tuple(touching_pieces)
 
     def get_start_row(self, group: int):
         return 0 if group == WHITE else self.height - 1
-    
+
     def get_goal_row(self, group: int):
         return 0 if group == BLACK else self.height - 1
 
@@ -89,30 +90,27 @@ class Board:
 
         curr_x, curr_y = piece.position
 
-        for dx, dy in [[-1,0], [1,0], [0,-1], [0,1]]:
+        for dx, dy in [[-1, 0], [1, 0], [0, -1], [0, 1]]:
             square = curr_x + dx, curr_y + dy
             item_square = self.query_square(square)
 
-            if item_square != OUT_OF_BOUNDS: 
-                surrounds.append(
-                    (square, item_square)
-                )
+            if item_square != OUT_OF_BOUNDS:
+                surrounds.append((square, item_square))
 
         return surrounds
 
     def query_square(self, square: tuple[int, int]) -> int:
         if not self._is_within_bounds(square):
-            return OUT_OF_BOUNDS 
-        
+            return OUT_OF_BOUNDS
+
         if isinstance(self[square], Egg):
             return self[square].group
-            
+
         return EMPTY_SQUARE
 
     def _is_within_bounds(self, pos: tuple[int, int]) -> bool:
         x, y = pos
-        return (OUT_OF_BOUNDS < x < self.height and 
-                OUT_OF_BOUNDS < y < self.length)
+        return OUT_OF_BOUNDS < x < self.height and OUT_OF_BOUNDS < y < self.length
 
     def __getitem__(self, coords):
         if isinstance(coords, (list, tuple)):
@@ -120,7 +118,7 @@ class Board:
             return self.grid[x][y]
         else:
             return self.grid[coords]
-        
+
     def __setitem__(self, coords, value):
         x, y = coords
         self.grid[x][y] = value
@@ -130,7 +128,7 @@ class Board:
         for row in self.grid:
             s += f"{row}\n"
         return s
-    
+
     #
 
     def start(self):
@@ -142,5 +140,4 @@ class Board:
         for line, ls in enumerate(grid):
             for column, cell in enumerate(ls):
                 if cell in [WHITE, BLACK]:
-                    self[line,column] = Egg(cell, (line,column))
-            
+                    self[line, column] = Egg(cell, (line, column))

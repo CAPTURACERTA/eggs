@@ -11,18 +11,18 @@ class GameRules:
     @staticmethod
     def get_piece_legal_moves(state: GameState, piece: Egg):
         moves = []
-        
-        if move := GameRules._get_first_square_move(state, piece): moves.append(move)
+
+        if move := GameRules._get_first_square_move(state, piece):
+            moves.append(move)
         moves += GameRules._get_piece_basic_moves(state, piece, piece)
         moves += GameRules._get_chain_moves(state, piece)
 
         return moves
-        
 
     @staticmethod
     def _get_first_square_move(state: GameState, piece: Egg):
         curr_x, curr_y = piece.position
-        
+
         start_row = state.board.get_start_row(piece.group)
         direction = 1 if start_row == 0 else -1
 
@@ -31,8 +31,10 @@ class GameRules:
             final_square = (target_x, curr_y)
             intermediate_square = (target_x - direction, curr_y)
 
-            if (state.board.query_square(intermediate_square) == EMPTY_SQUARE and
-                state.board.query_square(final_square) == EMPTY_SQUARE):
+            if (
+                state.board.query_square(intermediate_square) == EMPTY_SQUARE
+                and state.board.query_square(final_square) == EMPTY_SQUARE
+            ):
                 return Move(piece, [piece.position, final_square])
 
         return None
@@ -45,13 +47,13 @@ class GameRules:
 
         curr_x, curr_y = query_piece.position
 
-        for dx, dy in [[-1,0], [1,0], [0,-1], [0,1]]:
+        for dx, dy in [[-1, 0], [1, 0], [0, -1], [0, 1]]:
             square = (curr_x + dx, curr_y + dy)
             if state.board.query_square(square) == EMPTY_SQUARE:
-                moves.append(Move(piece,[piece.position, square]))
+                moves.append(Move(piece, [piece.position, square]))
 
         return moves
-    
+
     @staticmethod
     def _get_chain_moves(state: GameState, piece: Egg):
         moves = []
@@ -63,7 +65,7 @@ class GameRules:
                 moves += GameRules._get_piece_basic_moves(state, chain_piece, piece)
 
         return moves
-    
+
     @staticmethod
     def get_group_mandatory_moves(state: GameState, group: int) -> list | list[Move]:
         moves = []
@@ -71,12 +73,14 @@ class GameRules:
         for piece in state.board.get_group(group):
             moves += GameRules.get_mandatory_moves(state, piece)
 
-        moves = [
-                move for move in moves if len(move.captured_pieces) == max(
-                    [len(m.captured_pieces) for m in moves]
-                )
-        ] if moves else moves
-            
+        if moves:
+            moves = [
+                move
+                for move in moves
+                if len(move.captured_pieces)
+                == max([len(m.captured_pieces) for m in moves])
+            ]
+
         return moves
 
     @staticmethod
@@ -94,7 +98,11 @@ class GameRules:
             if landing_square := GameRules._can_i_eat(state, piece, enemy):
                 found_continuation = True
 
-                temp_move = Move(piece, [piece.position, landing_square], [enemy,])
+                temp_move = Move(
+                    piece,
+                    [piece.position, landing_square],
+                    [enemy],
+                )
                 current_move.path.append(landing_square)
                 current_move.captured_pieces.append(enemy)
 
@@ -104,12 +112,11 @@ class GameRules:
                 state.board.undo_move(temp_move)
                 current_move.path.pop()
                 current_move.captured_pieces.pop()
-        if (not found_continuation and 
-            len(current_move.captured_pieces) > 0):
+        if not found_continuation and len(current_move.captured_pieces) > 0:
             moves.append(deepcopy(current_move))
 
         return moves
-    
+
     # MOVES GETTER
     # CHECKERS
 
@@ -123,9 +130,9 @@ class GameRules:
 
             if state.board.query_square(landing_square) == EMPTY_SQUARE:
                 return landing_square
-        
+
         return ()
-    
+
     @staticmethod
     def check_win(state: GameState):
         NOBODY = 0
@@ -134,20 +141,21 @@ class GameRules:
         black_pieces = state.board.get_group(BLACK)
 
         for lr_piece in [
-            piece for piece in 
-            (white_pieces + black_pieces)
+            piece
+            for piece in (white_pieces + black_pieces)
             if piece.position[0] == state.board.get_goal_row(piece.group)
         ]:
             if touching_pieces := state.board.get_enemy_touching_pieces(lr_piece):
                 for enemy in touching_pieces:
-                    if (GameRules._can_i_eat(state, lr_piece, enemy) or
-                        GameRules._can_i_eat(state, enemy, lr_piece)):
+                    if GameRules._can_i_eat(
+                        state, lr_piece, enemy
+                    ) or GameRules._can_i_eat(state, enemy, lr_piece):
                         break
                 else:
                     return lr_piece.group
             else:
                 return lr_piece.group
-                    
+
         if not black_pieces:
             return WHITE
         if not white_pieces:
@@ -171,12 +179,12 @@ class GameRules:
 
         for piece in pieces:
             if (
-                GameRules._get_first_square_move(state, piece) or
-                GameRules._get_piece_basic_moves(state, piece, piece) or
-                GameRules._get_chain_moves(state, piece) 
+                GameRules._get_first_square_move(state, piece)
+                or GameRules._get_piece_basic_moves(state, piece, piece)
+                or GameRules._get_chain_moves(state, piece)
             ):
                 return True
-            
+
         return False
 
     # CHECKERS

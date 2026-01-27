@@ -26,7 +26,7 @@ while True:
     for move in moves:
         print(f"> {i} - {move}")
         i += 1
-    
+
     try:
         move = int(input("> move: ").strip())
         game.make_move(moves[move])

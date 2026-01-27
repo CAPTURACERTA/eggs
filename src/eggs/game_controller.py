@@ -7,22 +7,22 @@ from eggs.pieces import Egg
 class GameController:
     def __init__(self, state: GameState):
         self.state = state
-        
+
     def make_move(self, move: Move):
         if move.piece.group != self.state.turn:
             print("Not your turn")
             return False
-        
+
         if move not in self.get_piece_legal_moves(move.piece):
             return False
-        
+
         self.state.board.apply_move(move)
         self.state.moves.append(move)
 
         if Rules.check_win(self.state):
             self._end_game()
         else:
-            self.state.change(
+            self.state.change_state(
                 Rules.get_group_mandatory_moves(self.state, self.state.next_player())
             )
             # outras lógicas futuras...
@@ -36,22 +36,21 @@ class GameController:
 
         last_move = self.state.moves.pop()
         self.state.board.undo_move(last_move)
-        self.state.change(
+        self.state.change_state(
             Rules.get_group_mandatory_moves(self.state, self.state.next_player())
         )
 
-    # 
+    # CONTROLLERS
     # GET MOVES
-        
+
     def get_piece_legal_moves(self, piece: Egg):
         moves = []
 
         if self.state.temp_mandatory_moves:
             return [
-                move for move in self.state.temp_mandatory_moves
-                if move.piece == piece
+                move for move in self.state.temp_mandatory_moves if move.piece == piece
             ]
-        
+
         if piece in self.state.temp_pieces_moves:
             return self.state.temp_pieces_moves[piece]
 
@@ -60,7 +59,7 @@ class GameController:
 
         return moves
 
-    #
+    # GET MOVES
 
     def _end_game(self):
         print(f"player {self.state.turn} wins")

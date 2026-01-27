@@ -1,8 +1,9 @@
 from uuid import uuid4
 
+
 class Egg:
     def __init__(self, group: int, position: tuple[int, int]):
-        self.id = uuid4()          
+        self.id = uuid4()
         self.group = group
         self.position = position
 
