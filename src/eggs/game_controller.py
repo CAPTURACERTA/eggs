@@ -19,8 +19,8 @@ class GameController:
         self.state.board.apply_move(move)
         self.state.moves.append(move)
 
-        if Rules.check_win(self.state):
-            self._end_game()
+        if winner := Rules.check_win(self.state):
+            self._end_game(winner)
         else:
             self.state.change_state(
                 Rules.get_group_mandatory_moves(self.state, self.state.next_player())
@@ -61,6 +61,7 @@ class GameController:
 
     # GET MOVES
 
-    def _end_game(self):
-        print(f"player {self.state.turn} wins")
+    def _end_game(self, winner: int):
+        print(f"player {winner} wins")
+        self.state.winner = winner
         # lógica futura...

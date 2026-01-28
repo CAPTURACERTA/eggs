@@ -9,6 +9,20 @@ class GameRules:
     # MOVES GETTERS
 
     @staticmethod
+    def get_group_legal_moves(state: GameState, group: int):
+        moves = []
+        pieces = state.board.get_group(group)
+
+        moves += GameRules.get_group_mandatory_moves(state, pieces)
+        if moves:
+            return moves
+        
+        for piece in pieces:
+            moves += GameRules.get_piece_legal_moves(state, piece)
+
+        return moves
+
+    @staticmethod
     def get_piece_legal_moves(state: GameState, piece: Egg):
         moves = []
 
@@ -67,10 +81,11 @@ class GameRules:
         return moves
 
     @staticmethod
-    def get_group_mandatory_moves(state: GameState, group: int) -> list | list[Move]:
+    def get_group_mandatory_moves(state: GameState, group: int | list[Egg]) -> list | list[Move]:
+        pieces = state.board.get_group(group) if isinstance(group, int) else group
         moves = []
 
-        for piece in state.board.get_group(group):
+        for piece in pieces:
             moves += GameRules.get_mandatory_moves(state, piece)
 
         if moves:
@@ -139,22 +154,25 @@ class GameRules:
 
         white_pieces = state.board.get_group(WHITE)
         black_pieces = state.board.get_group(BLACK)
+        all_pieces = (white_pieces + black_pieces)
 
-        for lr_piece in [
+        if lr_pieces := [
             piece
-            for piece in (white_pieces + black_pieces)
+            for piece in all_pieces
             if piece.position[0] == state.board.get_goal_row(piece.group)
         ]:
-            if touching_pieces := state.board.get_enemy_touching_pieces(lr_piece):
-                for enemy in touching_pieces:
-                    if GameRules._can_i_eat(
-                        state, lr_piece, enemy
-                    ) or GameRules._can_i_eat(state, enemy, lr_piece):
+            all_mandatory_moves = [
+                move 
+                for piece in all_pieces 
+                for move in GameRules.get_mandatory_moves(state, piece)
+            ]
+            
+            for lr_piece in lr_pieces:
+                for move in all_mandatory_moves:
+                    if lr_piece in move:
                         break
                 else:
                     return lr_piece.group
-            else:
-                return lr_piece.group
 
         if not black_pieces:
             return WHITE

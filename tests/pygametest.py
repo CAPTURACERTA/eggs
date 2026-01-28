@@ -4,6 +4,7 @@ from eggs.board import Board, WHITE, BLACK, EMPTY_SQUARE
 from eggs.game_controller import GameController
 from eggs.game_state import GameState
 from eggs.pieces import Egg
+from eggs.ai import AI
 
 # --- CONFIGURAÇÕES VISUAIS ---
 SCREEN_WIDTH = 600
@@ -33,6 +34,7 @@ def main():
     board.start()
     gs = GameState(board)
     controller = GameController(gs)
+    ia = AI(gs, BLACK)
 
     # Variáveis de Estado da UI
     selected_piece: Egg | None = None
@@ -47,6 +49,11 @@ def main():
     running = True
     while running:
         # 1. EVENTOS
+        if gs.winner:
+            running = False
+        if gs.turn == ia.group:
+            controller.make_move(ia.chose_move())
+            
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -171,6 +178,7 @@ def main():
         clock.tick(60)
 
     print(gs.moves)
+    print(gs.board)
     pygame.quit()
     sys.exit()
 

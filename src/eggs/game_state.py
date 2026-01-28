@@ -6,6 +6,7 @@ class GameState:
     def __init__(self, board: Board):
         self.board = board
         self.turn = WHITE
+        self.winner = 0
 
         self.moves = []
 

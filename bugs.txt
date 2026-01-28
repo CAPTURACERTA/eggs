@@ -1,0 +1,11 @@
+(fixed)
+jogando um jogo contra a ia burra, percebi uma falha na lógica de vitória. avancei uma peça para a última fileira e não havia tensão lá, causando o jogo a indicar vitória.
+Porém, foi mais ou menos assim que ficou: 
+[...]
+[0,⚫, ...]
+[0,⚪,0,⚪,0]
+[0,0,⚪,0,0]
+ou seja, a pedra preta poderia capturar a branca que estava na linha de chegada
+
+fix: peguei todos os movimentos obrigatórios (até os que não passariam por existirem outros maiores) e verifiquei se a lr_piece estava nesse movimento (aplicando __contains__ no Move).
+Assim, dá para checar todas as "tensões" na posição, não apenas se há tnesão na última fileira.

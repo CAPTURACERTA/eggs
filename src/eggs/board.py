@@ -129,15 +129,31 @@ class Board:
             s += f"{row}\n"
         return s
 
-    #
+    # HELPERS and ____
+    # STARTERS
 
     def start(self):
         for cell in range(self.length):
             self[0, cell] = Egg(WHITE, (0, cell))
             self[-1, cell] = Egg(BLACK, (self.height - 1, cell))
 
-    def custom_board(self, grid: list[list[int]]):
-        for line, ls in enumerate(grid):
-            for column, cell in enumerate(ls):
+    @ classmethod
+    def custom_board(cls, grid: list[list[int]]):
+        if not grid:
+            raise ValueError("grid cannot be empty")
+        
+        height = len(grid)
+        lenght = len(grid[0])
+
+        for row in grid:
+            if len(row) != lenght:
+                raise ValueError("unproportional grid")
+            
+        board = Board(lenght, height)
+
+        for col, ls in enumerate(grid):
+            for line, cell in enumerate(ls):
                 if cell in [WHITE, BLACK]:
-                    self[line, column] = Egg(cell, (line, column))
+                    board[col, line] = Egg(cell, (col, line))
+        
+        return board
