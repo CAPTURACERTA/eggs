@@ -143,13 +143,13 @@ class Board:
             raise ValueError("grid cannot be empty")
         
         height = len(grid)
-        lenght = len(grid[0])
+        length = len(grid[0])
 
         for row in grid:
-            if len(row) != lenght:
+            if len(row) != length:
                 raise ValueError("unproportional grid")
             
-        board = Board(lenght, height)
+        board = Board(length, height)
 
         for col, ls in enumerate(grid):
             for line, cell in enumerate(ls):

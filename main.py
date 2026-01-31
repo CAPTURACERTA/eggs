@@ -1,3 +1,3 @@
-ls = [[12],["a","b",'C'], 3,]
-print([x for x in ls])
+ls = [1,2,3]
 
+print(ls[::-1][0])

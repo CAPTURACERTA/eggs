@@ -34,7 +34,6 @@ def main():
     board.start()
     gs = GameState(board)
     controller = GameController(gs)
-    ia = AI(gs, BLACK)
 
     # Variáveis de Estado da UI
     selected_piece: Egg | None = None
@@ -51,8 +50,9 @@ def main():
         # 1. EVENTOS
         if gs.winner:
             running = False
-        if gs.turn == ia.group:
-            controller.make_move(ia.chose_move())
+        # SIMULAÇÃO SE TIVER 1 IA
+        if gs.turn == WHITE:
+            controller.make_move(AI.choose_best_move(gs, (gs.turn == WHITE)))
             
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -67,6 +67,11 @@ def main():
                     # Importante: Limpar a seleção visual para não bugar o desenho
                     selected_piece = None
                     valid_moves_for_selected = []
+                
+                # # SIMULAÇÃO SE TIVER 2 IAS
+                if event.key == pygame.K_SPACE:
+                    controller.make_move(AI.choose_best_move(gs, (gs.turn == WHITE)))
+                            
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Clique esquerdo
