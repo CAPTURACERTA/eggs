@@ -1,10 +1,10 @@
 import pygame
 import sys
-from eggs.board import Board, WHITE, BLACK, EMPTY_SQUARE
+from eggs.board import Board
 from eggs.game_controller import GameController
 from eggs.game_state import GameState
-from eggs.pieces import Egg
 from eggs.ai import AI
+from eggs.types import *
 
 # --- CONFIGURAÇÕES VISUAIS ---
 SCREEN_WIDTH = 600
@@ -36,7 +36,7 @@ def main():
     controller = GameController(gs)
 
     # Variáveis de Estado da UI
-    selected_piece: Egg | None = None
+    selected_piece: Square | None = None
     valid_moves_for_selected: list = []  # Lista de objetos Move
 
     def get_row_col_from_mouse(pos):
@@ -50,9 +50,6 @@ def main():
         # 1. EVENTOS
         if gs.winner:
             running = False
-        # SIMULAÇÃO SE TIVER 1 IA
-        if gs.turn == WHITE:
-            controller.make_move(AI.choose_best_move(gs, (gs.turn == WHITE)))
             
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -70,7 +67,7 @@ def main():
                 
                 # # SIMULAÇÃO SE TIVER 2 IAS
                 if event.key == pygame.K_SPACE:
-                    controller.make_move(AI.choose_best_move(gs, (gs.turn == WHITE)))
+                    controller.make_move(AI.choose_best_move(board, (gs.turn == WHITE)))
                             
 
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -90,14 +87,11 @@ def main():
                             chosen_move = None
                             for move in valid_moves_for_selected:
                                 # move.path[-1] é o quadrado final ((row, col))
-                                if move.path[-1] == (row, col):
+                                if move.end == (row, col):
                                     chosen_move = move
                                     break
 
                             if chosen_move:
-                                print(
-                                    f"Movendo peça {selected_piece.position} para {(row, col)}"
-                                )
                                 success = controller.make_move(chosen_move)
                                 if success:
                                     selected_piece = None
@@ -115,15 +109,15 @@ def main():
                             item_at_square = board[row, col]
                             # Só seleciona se for um Ovo e for a vez do grupo dele
                             if (
-                                isinstance(item_at_square, Egg)
-                                and item_at_square.group == controller.state.turn
+                                item_at_square in [WHITE, BLACK]
+                                and item_at_square == controller.state.turn
                             ):
-                                selected_piece = item_at_square
+                                selected_piece = (row, col)
                                 valid_moves_for_selected = (
                                     controller.get_piece_legal_moves(selected_piece)
                                 )
                                 print(
-                                    f"Selecionada: {selected_piece} em {selected_piece.position}. Opções: {len(valid_moves_for_selected)}"
+                                    f"Selecionada: {selected_piece}. Opções: {len(valid_moves_for_selected)}"
                                 )
 
         # 2. DESENHO (DRAW)
@@ -143,13 +137,13 @@ def main():
         # B. Highlights (Movimentos Possíveis)
         if selected_piece and valid_moves_for_selected:
             # Desenha quadrado na peça selecionada
-            py, px = selected_piece.position
+            py, px = selected_piece
             rect = pygame.Rect(px * CELL_SIZE, py * CELL_SIZE, CELL_SIZE, CELL_SIZE)
             pygame.draw.rect(screen, COLOR_SELECTED, rect, 5)  # Borda grossa
 
             # Desenha bolinhas nos destinos
             for move in valid_moves_for_selected:
-                target_r, target_c = move.path[-1]
+                target_r, target_c = move.end
                 center_x = target_c * CELL_SIZE + CELL_SIZE // 2
                 center_y = target_r * CELL_SIZE + CELL_SIZE // 2
                 # Círculo translúcido (simulação)
@@ -159,12 +153,12 @@ def main():
         for row in range(ROWS):
             for col in range(COLS):
                 item = board[row, col]
-                if isinstance(item, Egg):
+                if item in [WHITE, BLACK]:
                     center_x = col * CELL_SIZE + CELL_SIZE // 2
                     center_y = row * CELL_SIZE + CELL_SIZE // 2
                     radius = CELL_SIZE // 2 - 15  # Margem
 
-                    color = COLOR_WHITE_EGG if item.group == WHITE else COLOR_BLACK_EGG
+                    color = COLOR_WHITE_EGG if item == WHITE else COLOR_BLACK_EGG
 
                     # Corpo da peça
                     pygame.draw.circle(screen, color, (center_x, center_y), radius)

@@ -1,11 +1,5 @@
-from eggs.pieces import Egg
 from eggs.move import Move
-
-
-OUT_OF_BOUNDS = -1
-EMPTY_SQUARE = 0
-WHITE = 1
-BLACK = 2
+from eggs.types import *
 
 
 class Board:
@@ -14,68 +8,86 @@ class Board:
         self.height = height
         self.grid = [[EMPTY_SQUARE for _ in range(length)] for _ in range(height)]
 
+        self.white_pieces = set()
+        self.black_pieces = set()
+
     def apply_move(self, move: Move):
-        if move.captured_pieces:
-            for piece in move.captured_pieces:
-                self[piece.position] = EMPTY_SQUARE
+        enemy_set = self.black_pieces if move.group == WHITE else self.white_pieces
+        own_set = self.white_pieces if move.group == WHITE else self.black_pieces
 
-        old_x, old_y = move.path[0]
-        new_x, new_y = move.path[-1]
+        if move.captured:
+            for square in move.captured:
+                self[square] = EMPTY_SQUARE
+                enemy_set.discard(square)
 
-        move.piece.position = (new_x, new_y)
-        self[old_x, old_y] = EMPTY_SQUARE
-        self[new_x, new_y] = move.piece
+        own_set.discard(move.start)
+        own_set.add(move.end)
+
+        self[move.start] = EMPTY_SQUARE
+        self[move.end] = move.group
 
     def undo_move(self, move: Move):
-        if move.captured_pieces:
-            for piece in move.captured_pieces:
-                self[piece.position] = piece
+        enemy_set = self.black_pieces if move.group == WHITE else self.white_pieces
+        own_set = self.white_pieces if move.group == WHITE else self.black_pieces
 
-        old_x, old_y = move.path[-1]
-        new_x, new_y = move.path[0]
+        if move.captured:
+            piece = WHITE if move.group == BLACK else BLACK
+            for square in move.captured:
+                self[square] = piece
+                enemy_set.add(square)
 
-        move.piece.position = (new_x, new_y)
-        self[old_x, old_y] = EMPTY_SQUARE
-        self[new_x, new_y] = move.piece
+        own_set.discard(move.end)
+        own_set.add(move.start)
+
+        self[move.end] = EMPTY_SQUARE
+        self[move.start] = move.group
 
     # GETTERS
 
-    def get_connected_group_chain(self, piece: Egg) -> list[Egg]:
+    def get_connected_group_chain(self, square: Square) -> list[Square]:
+        # “Isso será reescrito quando eu otimizar.” — GPT
         chain = []
-        pieces_to_look = [piece]
-        visited = {piece}
+        squares_to_look = [square]
+        visited = {square}
 
-        while pieces_to_look:
-            current_piece = pieces_to_look.pop()
-            chain.append(current_piece)
+        group = self[square]
 
-            for square, item_square in self.query_piece_surroundings(current_piece):
-                if item_square == piece.group and self[square] not in visited:
-                    pieces_to_look.append(self[square])
-                    visited.add(self[square])
+        while squares_to_look:
+            current_square = squares_to_look.pop()
+            chain.append(current_square)
+
+            for peeked_square, p_square_item in self.query_square_surroundings(current_square):
+                if p_square_item == group and peeked_square not in visited:
+                    squares_to_look.append(peeked_square)
+                    visited.add(peeked_square)
 
         return chain if len(chain) > 1 else []
 
-    def get_group(self, group: int) -> list[Egg]:
-        if group not in [1, 2]:
-            raise IndexError(f"No existing group {group}")
+    def get_touching_enemies(self, square: Square) -> list[Square]:     
+        squares = []
+        enemy_group = BLACK if self[square] == WHITE else WHITE
 
-        return [
-            piece
-            for row in self.grid
-            for piece in row
-            if piece != EMPTY_SQUARE and piece.group == group
-        ]
-
-    def get_enemy_touching_pieces(self, piece: Egg) -> tuple[Egg, ...]:
-        touching_pieces = []
-        enemy_group = BLACK if piece.group == WHITE else WHITE
-
-        for square, item_square in self.query_piece_surroundings(piece):
+        for square, item_square in self.query_square_surroundings(square):
             if item_square == enemy_group:
-                touching_pieces.append(self[square])
+                squares.append(square)
 
-        return tuple(touching_pieces)
+        return squares
+
+    def get_group_pieces(self, group: int) -> set[Square]:
+        """Returns the sets containing the pieces coordinates.\n
+        So, be aware you need to make a copy of it to iterate through"""
+        if group == WHITE:
+            return self.white_pieces
+        else:
+            return self.black_pieces
+
+    def _find_group_pieces(self, group: int) -> set[Square]:
+        return {
+            (x, y)
+            for x, row in enumerate(self.grid)
+            for y, item in enumerate(row)
+            if item == group
+        }
 
     def get_start_row(self, group: int):
         return 0 if group == WHITE else self.height - 1
@@ -83,34 +95,36 @@ class Board:
     def get_goal_row(self, group: int):
         return 0 if group == BLACK else self.height - 1
 
+    # GETTERS
     # HELPERS and ____
 
-    def query_piece_surroundings(self, piece: Egg) -> list[tuple[tuple[int, int], int]]:
-        surrounds = []
+    def query_square_surroundings(self, square: Square):
+        curr_x, curr_y = square
+        offsets = ((-1, 0), (1, 0), (0, -1), (0, 1)) 
 
-        curr_x, curr_y = piece.position
+        for dx, dy in offsets:
+            nx, ny = (curr_x + dx, curr_y + dy)
+            if OUT_OF_BOUNDS < nx < self.height and OUT_OF_BOUNDS < ny < self.length:
+                 yield (nx, ny), self.grid[nx][ny]
 
-        for dx, dy in [[-1, 0], [1, 0], [0, -1], [0, 1]]:
-            square = curr_x + dx, curr_y + dy
-            item_square = self.query_square(square)
-
-            if item_square != OUT_OF_BOUNDS:
-                surrounds.append((square, item_square))
-
-        return surrounds
-
-    def query_square(self, square: tuple[int, int]) -> int:
+    def query_square(self, square: Square) -> int:
         if not self._is_within_bounds(square):
             return OUT_OF_BOUNDS
 
-        if isinstance(self[square], Egg):
-            return self[square].group
+        if self[square] in [WHITE, BLACK]:
+            return self[square]
 
         return EMPTY_SQUARE
 
-    def _is_within_bounds(self, pos: tuple[int, int]) -> bool:
-        x, y = pos
+    def _is_within_bounds(self, square: Square) -> bool:
+        x, y = square
         return OUT_OF_BOUNDS < x < self.height and OUT_OF_BOUNDS < y < self.length
+
+    def is_chained(self, piece: Square):
+        for _, item in self.query_square_surroundings(piece):
+            if item == self[piece]:
+                return True
+        return False
 
     def __getitem__(self, coords):
         if isinstance(coords, (list, tuple)):
@@ -127,6 +141,9 @@ class Board:
         s = ""
         for row in self.grid:
             s += f"{row}\n"
+
+        s = s.replace("1", "⚪")
+        s = s.replace("2", "⚫")
         return s
 
     # HELPERS and ____
@@ -134,8 +151,10 @@ class Board:
 
     def start(self):
         for cell in range(self.length):
-            self[0, cell] = Egg(WHITE, (0, cell))
-            self[-1, cell] = Egg(BLACK, (self.height - 1, cell))
+            self[0, cell] = WHITE
+            self[-1, cell] = BLACK
+        self.white_pieces = self._find_group_pieces(WHITE)
+        self.black_pieces = self._find_group_pieces(BLACK)
 
     @ classmethod
     def custom_board(cls, grid: list[list[int]]):
@@ -154,6 +173,9 @@ class Board:
         for col, ls in enumerate(grid):
             for line, cell in enumerate(ls):
                 if cell in [WHITE, BLACK]:
-                    board[col, line] = Egg(cell, (col, line))
-        
+                    board[col, line] = cell
+
+        board.white_pieces = board._find_group_pieces(WHITE)
+        board.black_pieces = board._find_group_pieces(BLACK)
+
         return board

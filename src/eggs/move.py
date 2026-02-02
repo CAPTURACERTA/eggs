@@ -1,13 +1,20 @@
+from eggs.types import Square
 from dataclasses import dataclass, field
-from eggs.pieces import Egg
 
 
 @dataclass
 class Move:
-    piece: Egg
-    path: list[tuple[int, int]]
-    captured_pieces: list[Egg] = field(default_factory=list)
+    group: int
+    path: list[Square]
+    captured: list[Square] = field(default_factory=list)
 
-    def __contains__(self, item):
-        # checks for eggs, but could check for paths as well
-        return (item == self.piece or item in self.captured_pieces)
+    @property
+    def start(self) -> Square:
+        return self.path[0] if self.path else None
+
+    @property
+    def end(self) -> Square:
+        return self.path[-1] if self.path else None
+
+    def __contains__(self, square):
+        return (square in self.path or square in self.captured)

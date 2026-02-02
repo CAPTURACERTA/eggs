@@ -9,3 +9,11 @@ ou seja, a pedra preta poderia capturar a branca que estava na linha de chegada
 
 fix: peguei todos os movimentos obrigatórios (até os que não passariam por existirem outros maiores) e verifiquei se a lr_piece estava nesse movimento (aplicando __contains__ no Move).
 Assim, dá para checar todas as "tensões" na posição, não apenas se há tnesão na última fileira.
+
+-------
+
+[deepcopy] (fixed)
+Comecei a ter problemas que acredito serem culpa do deepcopy. Gemini me orientou a corrigir esse erro, porém, em algum momento eu vou ter que refazer boa parte da estrutura do código para migrar para algo mais "profissional", então não estou nem um pouco afim de passar, sla, um dia consertando essa bagunça. GPT tinha me avisado sobre, disse que quando chegasse a hora certa eu entenderia. Agora eu vejo.
+Bom, vou retornar o código à última versão estável (estava testando uma pequena melhoria no board ao colocar as peças em listas), focar no evaluate_pos, decidir com clareza os tópicos que o GPT me deu e, na hora certa, enfrentar bitboards...
+
+fix: decidi consertar XD
