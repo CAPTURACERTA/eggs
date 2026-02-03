@@ -42,15 +42,14 @@ class GameController:
     # CONTROLLERS
     # GET MOVES
 
-    def get_piece_legal_moves(self, piece: Square) -> list[Move]:
-        print("get_piece_legal_moves")
+    def get_piece_legal_moves(self, piece_pos: Square) -> list[Move]:
         if self.state.temp_mandatory_moves:
             return [
                 move for move in self.state.temp_mandatory_moves
-                if move.start == piece
+                if move.start == piece_pos
             ]
 
-        return Rules.get_piece_legal_moves(self.state.board, piece)
+        return Rules.get_piece_legal_moves(self.state.board, piece_pos)
 
 
     # GET MOVES

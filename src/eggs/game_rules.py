@@ -15,27 +15,27 @@ class GameRules:
         if moves:
             return moves
         
-        for piece in pieces:
-            moves += GameRules.get_piece_legal_moves(board, piece)
+        for piece_pos in pieces:
+            moves += GameRules.get_piece_legal_moves(board, piece_pos)
 
         return moves
 
     @staticmethod
-    def get_piece_legal_moves(board: Board, piece: Square):
+    def get_piece_legal_moves(board: Board, piece_pos: Square):
         moves = []
 
-        if move := GameRules._get_first_square_move(board, piece):
+        if move := GameRules._get_first_square_move(board, piece_pos):
             moves.append(move)
-        moves += GameRules._get_piece_basic_moves(board, piece, piece)
-        moves += GameRules._get_chain_moves(board, piece)
+        moves += GameRules._get_piece_basic_moves(board, piece_pos, piece_pos)
+        moves += GameRules._get_chain_moves(board, piece_pos)
 
         return moves
 
     @staticmethod
-    def _get_first_square_move(board: Board, piece: Square):
-        curr_x, curr_y = piece
+    def _get_first_square_move(board: Board, piece_pos: Square):
+        curr_x, curr_y = piece_pos
 
-        start_row = board.get_start_row(board[piece])
+        start_row = board.get_start_row(board[piece_pos])
         direction = 1 if start_row == 0 else -1
 
         if curr_x == start_row:
@@ -47,44 +47,44 @@ class GameRules:
                 board.query_square(intermediate_square) == EMPTY_SQUARE
                 and board.query_square(final_square) == EMPTY_SQUARE
             ):
-                return Move(board[piece], [piece, final_square])
+                return Move(board[piece_pos], [piece_pos, final_square])
 
         return None
 
     @staticmethod
     def _get_piece_basic_moves(
-        board: Board, query_piece: Square, piece: Square
+        board: Board, ref_piece_pos: Square, piece_pos: Square
     ) -> list[Move | None]:
         moves = []
 
-        curr_x, curr_y = query_piece
+        curr_x, curr_y = ref_piece_pos
 
         for dx, dy in [[-1, 0], [1, 0], [0, -1], [0, 1]]:
             square = (curr_x + dx, curr_y + dy)
             if board.query_square(square) == EMPTY_SQUARE:
-                moves.append(Move(board[piece], [piece, square]))
+                moves.append(Move(board[piece_pos], [piece_pos, square]))
 
         return moves
 
     @staticmethod
-    def _get_chain_moves(board: Board, piece: Square):
+    def _get_chain_moves(board: Board, piece_pos: Square):
         moves = []
 
-        chain = board.get_connected_group_chain(piece)
+        chain = board.get_connected_group_chain(piece_pos)
 
         if chain:
-            for chain_piece in chain[1:]:
-                moves += GameRules._get_piece_basic_moves(board, chain_piece, piece)
+            for chained_pos in chain[1:]:
+                moves += GameRules._get_piece_basic_moves(board, chained_pos, piece_pos)
 
         return moves
 
     @staticmethod
     def get_group_mandatory_moves(board: Board, group: int) -> list | list[Move]:
-        pieces = board.get_group_pieces(group)
+        pieces = list(board.get_group_pieces(group))
         moves = []
 
-        for piece in list(pieces):
-            moves += GameRules.get_mandatory_moves(board, piece)
+        for piece_pos in pieces:
+            moves += GameRules.get_mandatory_moves(board, piece_pos)
 
         if moves:
             moves = [
@@ -98,26 +98,26 @@ class GameRules:
 
     @staticmethod
     def get_mandatory_moves(
-        board: Board, piece: Square, current_move: Move = None
+        board: Board, piece_pos: Square, current_move: Move = None
     ) -> list | list[Move]:
         moves = []
 
         if current_move is None:
-            current_move = Move(board[piece], [piece])
+            current_move = Move(board[piece_pos], [piece_pos])
 
         found_continuation = False
 
-        for enemy in board.get_touching_enemies(piece):
-            if landing_square := GameRules._can_i_eat(board, piece, enemy):
+        for enemy_pos in board.get_touching_enemies(piece_pos):
+            if landing_square := GameRules._can_i_eat(board, piece_pos, enemy_pos):
                 found_continuation = True
 
                 temp_move = Move(
-                    board[piece],
-                    [piece, landing_square],
-                    [enemy],
+                    board[piece_pos],
+                    [piece_pos, landing_square],
+                    [enemy_pos],
                 )
                 current_move.path.append(landing_square)
-                current_move.captured.append(enemy)
+                current_move.captured.append(enemy_pos)
 
                 board.apply_move(temp_move)
                 moves += GameRules.get_mandatory_moves(board, landing_square, current_move)
@@ -141,12 +141,12 @@ class GameRules:
     # CHECKERS
 
     @staticmethod
-    def _can_i_eat(board: Board, piece: Square, enemy: Square):
-        dx = enemy[0] - piece[0]
-        dy = enemy[1] - piece[1]
+    def _can_i_eat(board: Board, piece_pos: Square, enemy_pos: Square) -> Square | tuple[()]:
+        dx = enemy_pos[0] - piece_pos[0]
+        dy = enemy_pos[1] - piece_pos[1]
 
         if abs(dx) + abs(dy) == 1:
-            landing_square = (enemy[0] + dx, enemy[1] + dy)
+            landing_square = (enemy_pos[0] + dx, enemy_pos[1] + dy)
 
             if board.query_square(landing_square) == EMPTY_SQUARE:
                 return landing_square

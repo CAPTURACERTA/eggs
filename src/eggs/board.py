@@ -44,13 +44,13 @@ class Board:
 
     # GETTERS
 
-    def get_connected_group_chain(self, square: Square) -> list[Square]:
+    def get_connected_group_chain(self, piece_pos: Square) -> list[Square]:
         # “Isso será reescrito quando eu otimizar.” — GPT
         chain = []
-        squares_to_look = [square]
-        visited = {square}
+        squares_to_look = [piece_pos]
+        visited = {piece_pos}
 
-        group = self[square]
+        group = self[piece_pos]
 
         while squares_to_look:
             current_square = squares_to_look.pop()
@@ -63,11 +63,11 @@ class Board:
 
         return chain if len(chain) > 1 else []
 
-    def get_touching_enemies(self, square: Square) -> list[Square]:     
+    def get_touching_enemies(self, piece_pos: Square) -> list[Square]:     
         squares = []
-        enemy_group = BLACK if self[square] == WHITE else WHITE
+        enemy_group = BLACK if self[piece_pos] == WHITE else WHITE
 
-        for square, item_square in self.query_square_surroundings(square):
+        for square, item_square in self.query_square_surroundings(piece_pos):
             if item_square == enemy_group:
                 squares.append(square)
 
@@ -76,10 +76,7 @@ class Board:
     def get_group_pieces(self, group: int) -> set[Square]:
         """Returns the sets containing the pieces coordinates.\n
         So, be aware you need to make a copy of it to iterate through"""
-        if group == WHITE:
-            return self.white_pieces
-        else:
-            return self.black_pieces
+        return self.white_pieces if group == WHITE else self.black_pieces
 
     def _find_group_pieces(self, group: int) -> set[Square]:
         return {
@@ -105,24 +102,21 @@ class Board:
         for dx, dy in offsets:
             nx, ny = (curr_x + dx, curr_y + dy)
             if OUT_OF_BOUNDS < nx < self.height and OUT_OF_BOUNDS < ny < self.length:
-                 yield (nx, ny), self.grid[nx][ny]
+                 yield (nx, ny), self[nx, ny]
 
     def query_square(self, square: Square) -> int:
         if not self._is_within_bounds(square):
             return OUT_OF_BOUNDS
 
-        if self[square] in [WHITE, BLACK]:
-            return self[square]
-
-        return EMPTY_SQUARE
+        return self[square]
 
     def _is_within_bounds(self, square: Square) -> bool:
         x, y = square
         return OUT_OF_BOUNDS < x < self.height and OUT_OF_BOUNDS < y < self.length
 
-    def is_chained(self, piece: Square):
-        for _, item in self.query_square_surroundings(piece):
-            if item == self[piece]:
+    def is_chained(self, piece_pos: Square):
+        for _, item in self.query_square_surroundings(piece_pos):
+            if item == self[piece_pos]:
                 return True
         return False
 
