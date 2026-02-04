@@ -39,6 +39,8 @@ def main():
     selected_piece: Square | None = None
     valid_moves_for_selected: list = []  # Lista de objetos Move
 
+    depth = 4
+
     def get_row_col_from_mouse(pos):
         x, y = pos
         col = x // CELL_SIZE
@@ -57,6 +59,13 @@ def main():
 
             if event.type == pygame.KEYDOWN:
                 # Verifica se apertou Z e se o CTRL está segurado
+                if event.key == pygame.K_LEFT:
+                    depth -= 1
+                    print(f"DEPTH: {depth}")
+                if event.key == pygame.K_RIGHT:
+                    depth += 1
+                    print(f"DEPTH: {depth}")
+
                 if event.key == pygame.K_z and (
                     pygame.key.get_mods() & pygame.KMOD_CTRL
                 ):
@@ -67,7 +76,7 @@ def main():
                 
                 # # SIMULAÇÃO SE TIVER 2 IAS
                 if event.key == pygame.K_SPACE:
-                    controller.make_move(AI.choose_best_move(board, (gs.turn == WHITE)))
+                    controller.make_move(AI.choose_best_move(board, depth, (gs.turn == WHITE)))
                             
 
             if event.type == pygame.MOUSEBUTTONDOWN:

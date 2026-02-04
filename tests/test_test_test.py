@@ -6,24 +6,17 @@ from eggs.move import Move
 
 b = Board.custom_board(
     [
-        [1, 1, 1, 1, 1],
+        [1, 1, 0, 1, 1],
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [2, 2, 2, 2, 2],
+        [0, 0, 1, 0, 0],
+        [0, 0, 2, 0, 0],
+        [2, 2, 2, 0, 2],
     ]
 )
 gs = GameState(b)
 
-print(b)
-p1 = b.get_group_pieces(WHITE)
-print(p1)
-b.apply_move(
-    Move(WHITE, [(0,0),(2,0)])
-)
-print(b)
-print(p1)
+print(AI.evaluate_position(b))
 
 """
 [
