@@ -17,3 +17,46 @@ Comecei a ter problemas que acredito serem culpa do deepcopy. Gemini me orientou
 Bom, vou retornar o código à última versão estável (estava testando uma pequena melhoria no board ao colocar as peças em listas), focar no evaluate_pos, decidir com clareza os tópicos que o GPT me deu e, na hora certa, enfrentar bitboards...
 
 fix: decidi consertar XD
+
+-------
+[transposition table] (fixed)
+Acho que tem algo errado com o TT, a ia, nessa posição:
+[⚪, 0, 0, 0, 0]
+[⚪, 0, 0, 0, 0]
+[⚫, 0, 0, 0, ⚪]
+[⚫, 0, 0, ⚪, ⚪]
+[0, 0, 0, 0, ⚫]
+[0, ⚫, 0, 0, ⚫]
+fez:
+[⚪, 0, 0, 0, 0]
+[⚪, 0, 0, 0, 0]
+[⚫, 0, 0, 0, 0]
+[⚫, 0, ⚪, ⚪, ⚪]
+[0, 0, 0, 0, ⚫]
+[0, ⚫, 0, 0, ⚫]
+argumentando que tinha achado uma sequência de vitória. Mais alguns movimentos à frente e ela estava perdida.
+
+Outra situação parecida, pretas jogam:
+[0, 0, 0, ⚪, ⚪]
+[0, 0, 0, 0, 0]
+[0, 0, 0, ⚫, ⚫]
+[0, 0, 0, 0, 0]
+[0, 0, 0, 0, 0]
+[0, 0, 0, 0, 0]
+se as pretas fizere:
+[0, 0, 0, ⚪, ⚪]
+[0, 0, 0, ⚫, 0]
+[0, 0, 0, ⚫, 0]
+[0, 0, 0, 0, 0]
+[0, 0, 0, 0, 0]
+[0, 0, 0, 0, 0]
+é gg, não tem como impedir a vitória. Ao invés disso, não importa o quanto eu aumentasse a profundidade, a preta fazia:
+[0, 0, 0, ⚪, ⚪]
+[0, 0, 0, ⚫, 0]
+[0, 0, 0, 0, ⚫]
+[0, 0, 0, 0, 0]
+[0, 0, 0, 0, 0]
+[0, 0, 0, 0, 0]
+o que causa um empate.
+
+fix: A chave estava errada, faltava dizer de quem era a vez naquela posição.

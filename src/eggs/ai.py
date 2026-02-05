@@ -5,8 +5,33 @@ from eggs.points import *
 
 
 class AI:
+    transposition_table: dict[tuple, TTEntry] = {}
+
     @staticmethod
     def minimax(board: Board, depth: int, alpha: float, beta: float, maximizer_player: bool):
+        original_alpha = alpha
+        original_beta = beta 
+        
+        # Check TT
+        state_key = (board.to_tuple(), maximizer_player)
+
+        if state_key in AI.transposition_table:
+            entry = AI.transposition_table[state_key]
+            tt_depth, tt_score, tt_flag = entry
+
+            if tt_depth >= depth:
+                if tt_flag == EXACT:
+                    return tt_score
+                elif tt_flag == LOWER:
+                    alpha = max(alpha, tt_score)
+                elif tt_flag == UPPER:
+                    beta = min(beta, tt_score)
+
+                if alpha >= beta:
+                    return tt_score
+                    
+
+        # Minimax
         winner = Rules.check_win(board)
         if depth == 0 or winner != 0:
             if winner == WHITE: return 100 + depth
@@ -14,36 +39,45 @@ class AI:
             return AI.evaluate_position(board)
         
         moves = Rules.get_group_legal_moves(board, WHITE if maximizer_player else BLACK)
-        moves.sort(key= lambda m: m.is_forward, reverse=True)
+        moves.sort(key=lambda m: m.is_forward, reverse=True)
 
+        best_score = 0
+        
         if maximizer_player:
-            max_eval = -float("inf")
-
+            best_score = -float("inf")
             for move in moves:
                 board.apply_move(move)
-                eval = AI.minimax(board, depth - 1, alpha, beta, False)
+                val = AI.minimax(board, depth - 1, alpha, beta, False)
                 board.undo_move(move)
-
-                max_eval = max(max_eval, eval)
-                alpha = max(alpha, eval)
+                
+                best_score = max(best_score, val)
+                alpha = max(alpha, val)
                 if beta <= alpha:
-                    break
-
-            return max_eval
+                    break 
         else:
-            min_eval = float("inf")
-
+            best_score = float("inf")
             for move in moves:
                 board.apply_move(move)
-                eval = AI.minimax(board, depth - 1, alpha, beta, True)
+                val = AI.minimax(board, depth - 1, alpha, beta, True)
                 board.undo_move(move)
-
-                min_eval = min(min_eval, eval)
-                beta = min(beta, eval)
+                
+                best_score = min(best_score, val)
+                beta = min(beta, val)
                 if beta <= alpha:
                     break
+        
+        # 4. Write TT
+        entry_flag = EXACT
+        if best_score <= original_alpha:
+            entry_flag = UPPER
+        elif best_score >= original_beta:
+            entry_flag = LOWER
+        
+        AI.transposition_table[state_key] = (
+            depth, best_score, entry_flag
+        )
 
-            return min_eval
+        return best_score
 
     @staticmethod
     def choose_best_move(board: Board, depth: int, maximizer_player: bool):

@@ -120,6 +120,9 @@ class Board:
                 return True
         return False
 
+    def to_tuple(self):
+        return tuple(tuple(row) for row in self.grid)
+
     def __getitem__(self, coords):
         if isinstance(coords, (list, tuple)):
             x, y = coords

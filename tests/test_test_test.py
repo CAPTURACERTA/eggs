@@ -16,7 +16,7 @@ b = Board.custom_board(
 )
 gs = GameState(b)
 
-print(AI.evaluate_position(b))
+print(b.to_tuple())
 
 """
 [
