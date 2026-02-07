@@ -14,3 +14,6 @@ type TTEntry = tuple[TTEDepth, TTEScore, TTEFlag]
 EXACT = 0
 UPPER = 1
 LOWER = -1
+
+class SearchTimeOut(Exception):
+    pass
